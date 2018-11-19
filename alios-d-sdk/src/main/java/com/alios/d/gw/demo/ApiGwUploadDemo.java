@@ -13,7 +13,9 @@
  */
 package com.alios.d.gw.demo;
 
+import com.alibaba.fastjson.JSONObject;
 import com.alios.d.gw.sdk.FileUploadClient;
+import com.alios.d.gw.sdk.dto.FileUploadDTO;
 
 /**
  * author autoCreate
@@ -22,18 +24,26 @@ import com.alios.d.gw.sdk.FileUploadClient;
 public class ApiGwUploadDemo {
     public static void main(String[] args) {
         FileUploadClient fileUploadClient = FileUploadClient.newBuilder()
-                //必填
-                .tenantId("your tenantId")
-                //必填
-                .eventId("your eventId")
-                .eventVersion(1)
-                //必填
-                .deviceId("your deviceId")
-                .vinId("your vinId")
                 .groupHost("api网关host")
                 .appKey("your appkey")
                 .appSecret("your appsecret")
                 .build();
-        fileUploadClient.upload("/path/to/file/file.zip");
+        FileUploadDTO fileUploadDTO = new FileUploadDTO();
+        fileUploadDTO.setEventId("you eventId");
+        fileUploadDTO.setDataId("这条数据的唯一标识");
+        fileUploadDTO.setItemId("数据所属主体ID，例如车的vin号，手机的imei号，设备id，tenantId等");
+        //数据上传的重试次数
+        fileUploadDTO.setReissueCount(0);
+        //客户端上报数据的时间
+        fileUploadDTO.setClientTimestamp(System.currentTimeMillis());
+        //服务端上报数据的时间
+        fileUploadDTO.setServerTimestamp(System.currentTimeMillis());
+        //客户自定义需要上报的数据，
+        JSONObject yourData = new JSONObject();
+        //客户自定义上报的数据中必须包含key为localFilePath的key
+        yourData.put("localFilePath", "/path/to/your/file/file.jpg");
+        yourData.put("key", "value");
+        fileUploadDTO.setData(yourData);
+        fileUploadClient.upload(fileUploadDTO);
     }
 }
