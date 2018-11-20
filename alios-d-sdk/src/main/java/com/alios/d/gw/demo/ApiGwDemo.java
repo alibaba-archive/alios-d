@@ -43,7 +43,7 @@ public class ApiGwDemo {
     public static void main(String[] args) {
         ApiGwClient syncClient = ApiGwClient.newBuilder()
                 .stage("release")
-                .groupHost("api网关host")
+                .groupHost("api host")  //api网关host
                 .appKey("your appkey")
                 .appSecret("your appsecret")
                 .build();

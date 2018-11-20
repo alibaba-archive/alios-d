@@ -20,6 +20,7 @@ public class ResultDTO<T> {
         }
         ResultDTO resultDTO = new ResultDTO();
         resultDTO.setData(v);
+        resultDTO.setSuccess(resultCode.isSuccess());
         resultDTO.setErrorCode(resultCode.getCode());
         resultDTO.setErrorMsg(resultCode.getMessage());
         resultDTO.setLocalizedMsg(resultCode.getLocalizedMsg());

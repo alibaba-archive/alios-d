@@ -76,7 +76,9 @@ public final class FileUploadClient extends AbstractApiGwClient {
      */
     public ResultDTO upload(FileUploadDTO fileUploadDTO) {
         if (fileUploadDTO == null || fileUploadDTO.getEventId() == null || fileUploadDTO.getItemId() == null
-                || fileUploadDTO.getData() == null || fileUploadDTO.getData().get(FILE_PATH_KEY) == null) {
+                || fileUploadDTO.getData() == null || fileUploadDTO.getData().get(FILE_PATH_KEY) == null
+                || fileUploadDTO.getTenantId() == null || fileUploadDTO.getDataId() == null || fileUploadDTO.getServerTimestamp() == null
+                || fileUploadDTO.getClientTimestamp() == null || fileUploadDTO.getReissueCount() == null) {
             return ResultDTO.getResult(null, ResultCodes.REQUEST_PARAM_ERROR);
         }
         ResultDTO<JSONObject> uploadMetaResultDTO = getUploadMeta(fileUploadDTO);
@@ -103,14 +105,14 @@ public final class FileUploadClient extends AbstractApiGwClient {
         String apiPath = "dataconnectorcloud.data.pushUploadFileResult";
         ApiTransferParamDTO paramDTO = new ApiTransferParamDTO();
         JSONObject cloudSdkJson = new JSONObject();
-        cloudSdkJson.put("SinkKey", uploadMeta.getString("sinkKey"));
-        cloudSdkJson.put("Path", uploadMeta.getString("dir") + uploadMeta.getString("uploadFileName"));
+        cloudSdkJson.put("SinkExtendKey", uploadMeta.getString("sinkKey"));
+        cloudSdkJson.put("OssUrl", uploadMeta.getString("dir") + uploadMeta.getString("uploadFileName"));
         cloudSdkJson.put("FileName", uploadMeta.getString("uploadFileName"));
         cloudSdkJson.put("UploadResult", uploadResultDTO.isSuccess());
         if (!uploadResultDTO.isSuccess()) {
             cloudSdkJson.put("UploadMsg", uploadResultDTO.getErrorMsg());
         }
-        cloudSdkJson.put("TimeStamp", System.currentTimeMillis());
+        cloudSdkJson.put("OssTimeStamp", System.currentTimeMillis());
         paramDTO.addParam("cloudSdkJson", cloudSdkJson);
 
         JSONObject businessJson = JSONObject.parseObject(JSONObject.toJSONString(fileUploadDTO));
@@ -121,8 +123,12 @@ public final class FileUploadClient extends AbstractApiGwClient {
         String respJsonStr = new String(uploadMetaResponse.getBody(), Charset.forName("utf-8"));
         JSONObject respJson = JSONObject.parseObject(respJsonStr);
         if (statusCode != 200) {
-            return ResultDTO.getResult(null,
-                    new ResultCode(602, respJson.getString("message"), respJson.getString("localizedMsg")));
+            if (respJson != null) {
+                return ResultDTO.getResult(null,
+                        new ResultCode(602, respJson.getString("message"), respJson.getString("localizedMsg")));
+            } else {
+                return ResultDTO.getResult(null, ResultCodes.SERVER_ERROR);
+            }
         }
         return ResultDTO.getResult(null);
     }
@@ -135,7 +141,7 @@ public final class FileUploadClient extends AbstractApiGwClient {
         String apiPath = "dataconfig.uploadurl.get";
         ApiTransferParamDTO paramDTO = new ApiTransferParamDTO();
         JSONObject request = new JSONObject();
-        request.put("tenantId", fileUploadDTO.getItemId());
+        request.put("tenantId", fileUploadDTO.getTenantId());
         request.put("deviceId", fileUploadDTO.getItemId());
         request.put("eventId", fileUploadDTO.getEventId());
         String localFilePath = fileUploadDTO.getData().getString(FILE_PATH_KEY);
@@ -252,6 +258,7 @@ public final class FileUploadClient extends AbstractApiGwClient {
             reader.close();
             reader = null;
         } catch (Exception e) {
+            e.printStackTrace();
             return ResultDTO.getResult(false, new ResultCode(601, "upload to oss error", "上传文件到oss失败"));
         } finally {
             if (conn != null) {
@@ -259,7 +266,6 @@ public final class FileUploadClient extends AbstractApiGwClient {
                 conn = null;
             }
         }
-        System.out.println("res:" + res);
         return ResultDTO.getResult(true);
     }
 

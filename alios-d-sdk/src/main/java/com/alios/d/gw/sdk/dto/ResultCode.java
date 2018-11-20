@@ -22,4 +22,8 @@ public class ResultCode {
     public String getLocalizedMsg() {
         return localizedMsg;
     }
+
+    public boolean isSuccess() {
+        return 200 == code;
+    }
 }

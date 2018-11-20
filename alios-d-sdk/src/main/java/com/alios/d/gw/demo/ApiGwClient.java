@@ -74,6 +74,18 @@ public final class ApiGwClient extends AbstractApiGwClient {
     }
 
     /**
+     * 云云对接同步执行示例
+     * 云云对接的apiPath为dataconnectorcloud.data.commonPushBatch
+     * @param _body
+     * @return
+     */
+    public ApiResponse 云云对接例子(String _body) {
+        String _apiPath = "dataconnectorcloud.data.commonPushBatch";
+
+        return syncInvokeWrapper(_apiPath, _body);
+    }
+
+    /**
      * 同步执行示例
      * @param paramDTO
      * @return

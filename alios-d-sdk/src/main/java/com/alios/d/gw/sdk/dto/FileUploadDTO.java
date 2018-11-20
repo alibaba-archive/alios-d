@@ -6,7 +6,8 @@ import com.alibaba.fastjson.JSONObject;
  * @author auto create
  */
 public class FileUploadDTO {
-    private String eventId;
+    private String tenantId;
+    private Integer eventId;
     private String dataId;
     private String itemId;
     private Long clientTimestamp;
@@ -14,11 +15,19 @@ public class FileUploadDTO {
     private Integer reissueCount;
     private JSONObject data;
 
-    public String getEventId() {
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public Integer getEventId() {
         return eventId;
     }
 
-    public void setEventId(String eventId) {
+    public void setEventId(Integer eventId) {
         this.eventId = eventId;
     }
 
