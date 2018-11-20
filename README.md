@@ -1,6 +1,6 @@
 # alios-d
-请求网关的demo类:  ApiGwDemo    
-非结构化数据上传的demo类: ApiGwUploadDemo
+请求网关的demo类:  ApiGwDemo\
+非结构化数据上传的demo类: ApiGwUploadDemo\
 云云对接的demo类：YydjApiDemo
 
 调用api服务
