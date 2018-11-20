@@ -38,8 +38,8 @@ public class YydjApiDemo {
          * 	"eventId": 1,//事件id
          * 	"dataId":"流水号ID，用以标识唯一",
          * 	"itemId": "数据所属主体ID，例如车的vin号，手机的imei号等",
-         * 	"serverTimestamp": "1519696866000", //云云对接服务端时间
-         * 	"clientTimestamp": "1519696866001", //云云对接客户端时间
+         * 	"serverTimestamp": 1519696866000, //云云对接服务端时间
+         * 	"clientTimestamp": "1519696866001, //云云对接客户端时间
          * 	"reissueCount": "重传次数",
          * 	"data": {//用户的自定义参数
          * 		"Driver_Door_Lock_Status": "1",

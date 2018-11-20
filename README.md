@@ -1,7 +1,8 @@
 # alios-d
 请求网关的demo类:  ApiGwDemo\
 非结构化数据上传的demo类: ApiGwUploadDemo\
-云云对接的demo类：YydjApiDemo
+云云对接的demo类：YydjApiDemo\
+以上demo类中的api host、appKey以及appSecret需要找api开发人员提供
 
 调用api服务
 
