@@ -54,9 +54,6 @@ OSS简介：
 
 ### 3.2 maven依赖
 
-本SDK依赖了okhttp3开源组件，版本号是3.4.1，请引用sdk代码的时候，务必注意在你项目的build.gradle中dependencies中配置okhttp组件：
-
-
 	<dependency>
                 <groupId>com.aliyun.api.gateway</groupId>
                 <artifactId>sdk-core-java</artifactId>
