@@ -79,6 +79,6 @@ OSS简介：
             </dependency>
 	
 
-### 3.4 调用Demo
+### 3.3 调用Demo
 
 执行Demo类中的main方法即可。
