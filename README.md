@@ -54,7 +54,7 @@ OSS简介：
 
 ### 3.2 maven依赖
 
-	<dependency>
+	    <dependency>
                 <groupId>com.aliyun.api.gateway</groupId>
                 <artifactId>sdk-core-java</artifactId>
                 <version>1.0.4</version>
