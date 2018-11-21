@@ -1,28 +1,84 @@
-# alios-d
-请求网关的demo类:  ApiGwDemo\
-非结构化数据上传的demo类: ApiGwUploadDemo\
-云云对接的demo类：YydjApiDemo\
-以上demo类中的api host、appKey以及appSecret需要找api开发人员提供
+# Alios Data SDK for java 使用指南
+## 1 SDK简介
 
-调用api服务
+本SDK是阿里云Alios数据工程团队提供给用户的调用示例代码，代码文件的层级结构如下：
 
-一、如果调用api？\
-ApiGwDemo和ApiGwClient是调用api的例子类，用户只需要稍微修改一下这两个类，就可以进行api的调用。\
-1、将ApiGwDemo中的appKey和appSecret替换成你自己的应用对应的appKey和appSecret，将groupHost替换成对应的api网关的host；\
-2、将ApiGwClient中的_apiPath参数替换成你想要请求的api的path（path列表可向api开发索要，示例：a.b.c）；\
-3、参数要以json字符串的形式传递，形式为：{"params": {"key1":"value1", "key2":"value2"}}，其中，key1、key2和key3是api需要用户传递的参数。用户可以自己拼装成这种形式的字符串，也可以使用sdk中的ApiTransferParamDTO来组装，再转成json字符串。\
-4、执行ApiGwDemo中的main方法即可调用指定的api。\
-二、返回结果示例。\
-最外层返回ApiResponse\
-{\
-	"statusCode": 200,//响应状态码，大于等于200小于300表示成功；大于等于400小于500为客户端错误；大于500为服务端错误。200表示成功，errorCode同HTTP，例如404\
-	"body": //byte数组，请使用new String(response.getBody(), "utf-8")转换成String\
-}\
-body转换成的字符串如无特殊说明，为下述Json\
-{\
-	"id": 1111,//requestId\
-	"code": 200,//返回码，200为成功，其他为失败，可调用hasSucceeded()查询是否成功\
-	"message": "",//解释\
-	"localizedMsg": "中文描述",//中文描述\
-	"data"://服务提供者的返回，不同接口有不同返回类型，具体请联系接口提供者\
-}
+**SDK实现文件**  
+
+* com.alios.d.gw.sdk
+	* AbstractApiGwClient		`抽象网关访问类`
+	* AbstractBaseApiClientBuilder		`抽象网关client的Builder类`
+	* ApiTransferParamDTO	`辅助开发人员构建请求参数`
+	* FileUploadClient      `文件上传Client类`
+	* com.alios.d.gw.sdk.dto
+	    * FileUploadDTO     `文件上传参数`
+	    * ResultCode        `调用方法返回错误码包装类`
+	    * ResultCodes       `包含标准错误码的常量类`
+	    * ResultDTO         `返回结果的包装类`
+	* com.alios.d.gw.sdk.util
+	    * ApiGwPathUtil     `网关Path转换工具类`
+
+**SDK调用文件**  
+
+*  com.alios.d.gw.demo
+    * ApiGwClient       `通用网关api调用客户端`
+    * ApiGwDemo         `通用网关api调用demo程序类`
+    * ApiGwUploadDemo   `文件上传Demo程序类`
+    * YydjApiDemo       `调用云云对接Demo程序类`
+    
+本SDK包含了对API网关和OSS的SDK的封装，用户无须关心底层的细节。  
+API网关简介：
+`https://help.aliyun.com/document_detail/29464.html?spm=a2c4g.11186623.3.2.7b186e23bpJeEF`   
+OSS简介：
+`https://help.aliyun.com/document_detail/31817.html?spm=a2c4g.11186623.6.542.71812d47tydzEw`
+
+
+## 2 SDK配置
+
+本SDK需要配置好之后才能正常使用，在**SDK调用文件ApiGwDemo、ApiGwUploadDemo、YydjApiDemo**中，用户可根据需要使用这三个Demo类的一个或者多个，有三个值是必须配置的：
+
+    api host：是api网关的域名
+    appKey: Api绑定的的AppKey
+    appSecret: Api绑定的的AppSecret
+    
+    这三个配置可以找api的开发获取。
+    
+
+**重要提示：appKey和appSecret是网关认证用户请求的钥匙，这两个配置如果保存在客户端，需要加密处理。** 
+
+
+## 3 SDK使用
+
+### 3.1 把SDK引入你的项目
+配置完成之后，本SDK就可以使用了。直接把com.alios.d.gw.client文件夹复制到你项目的src/java文件夹下，然后就能直接应用了。
+
+### 3.2 maven依赖
+
+本SDK依赖了okhttp3开源组件，版本号是3.4.1，请引用sdk代码的时候，务必注意在你项目的build.gradle中dependencies中配置okhttp组件：
+
+
+	<dependency>
+                <groupId>com.aliyun.api.gateway</groupId>
+                <artifactId>sdk-core-java</artifactId>
+                <version>1.0.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>1.2.48</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.5.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpmime</artifactId>
+                <version>4.5.3</version>
+            </dependency>
+	
+
+### 3.4 调用Demo
+
+执行Demo类中的main方法即可。
