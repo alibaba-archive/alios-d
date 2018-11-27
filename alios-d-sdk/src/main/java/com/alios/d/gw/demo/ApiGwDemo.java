@@ -26,30 +26,35 @@ import com.alios.d.gw.sdk.ApiTransferParamDTO;
 
 public class ApiGwDemo {
 
-    private static void printResponse(ApiResponse response) {
-        try {
-            System.out.println("response code = " + response.getStatusCode());
-            System.out.println("response content = " + new String(response.getBody(), "utf-8"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public static void main(String[] args) {
+        System.out.println(new ApiGwDemo().apiRequest());
     }
 
     /**
-     * 本main方法可以脱离容器直接执行调用，仅测试使用。
-     * 正常程序调用不应该像下面这样调用，而是应该通过SyncApiClientConfiguration初始化一个单例client bean，再注入调用
-     * @param args
+     * 获取mqtt token
+     * @return
      */
-    public static void main(String[] args) {
+    public JSONObject apiRequest() {
         ApiGwClient syncClient = ApiGwClient.newBuilder()
                 .stage("release")
-                .groupHost("api host")  //api网关host
-                .appKey("your appkey")
-                .appSecret("your appsecret")
+                .groupHost("alios-d-gw-daily.aliyuncs.com")  //api网关host
+                .appKey("25254733")
+                .appSecret("4c6b11b04d749f3ddaa7c65b832fee9c")
                 .build();
         ApiTransferParamDTO apiTransferParamDTO = new ApiTransferParamDTO();
-        apiTransferParamDTO.addParam("paramKey","paramValue");
-        ApiResponse response = syncClient.同步方法例子(JSONObject.toJSONString(apiTransferParamDTO));
-        printResponse(response);
+        apiTransferParamDTO.addParam("param1","value1");
+        apiTransferParamDTO.addParam("param2","value2");
+        apiTransferParamDTO.addParam("param3",3);
+        ApiResponse response = syncClient.doApiRequest(JSONObject.toJSONString(apiTransferParamDTO));
+        if (response != null && response.getStatusCode() == 200) {
+            String body = new String(response.getBody());
+            JSONObject bodyJson = JSONObject.parseObject(body);
+            int code = bodyJson.getInteger("code");
+            if (code == 200) {
+                String dataStr = bodyJson.getString("data");
+                return JSONObject.parseObject(dataStr);
+            }
+        }
+        return null;
     }
 }

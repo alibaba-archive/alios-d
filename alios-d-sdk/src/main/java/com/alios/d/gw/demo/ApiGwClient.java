@@ -17,10 +17,8 @@ import com.alibaba.cloudapi.sdk.core.annotation.ThreadSafe;
 import com.alibaba.cloudapi.sdk.core.model.ApiCallBack;
 import com.alibaba.cloudapi.sdk.core.model.ApiResponse;
 import com.alibaba.cloudapi.sdk.core.model.BuilderParams;
-import com.alibaba.fastjson.JSONObject;
 import com.alios.d.gw.sdk.AbstractApiGwClient;
 import com.alios.d.gw.sdk.AbstractBaseApiClientBuilder;
-import com.alios.d.gw.sdk.ApiTransferParamDTO;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -54,21 +52,16 @@ public final class ApiGwClient extends AbstractApiGwClient {
         }
     }
 
-    public static Builder newBuilder(){
+    public static Builder newBuilder() {
         return new Builder();
     }
 
-    public static ApiGwClient getInstance(){
+    public static ApiGwClient getInstance() {
         return getApiClassInstance(ApiGwClient.class);
     }
 
-    /**
-     * 同步执行示例，注意_body必须是"{"param":objxxxxx}"这样的结构，可使用ApiTransferParamDTO封装
-     * @param _body
-     * @return
-     */
-    public ApiResponse 同步方法例子(String _body) {
-        String _apiPath = "cloud.mqtt.getConfig";
+    public ApiResponse doApiRequest(String _body) {
+        String _apiPath = "gaode.api.service";
 
         return syncInvokeWrapper(_apiPath, _body);
     }
@@ -76,36 +69,16 @@ public final class ApiGwClient extends AbstractApiGwClient {
     /**
      * 云云对接同步执行示例
      * 云云对接的apiPath为dataconnectorcloud.data.commonPushBatch
+     *
      * @param _body
      * @return
      */
-    public ApiResponse 云云对接例子(String _body) {
+    public ApiResponse commonPushBatch(String _body) {
         String _apiPath = "dataconnectorcloud.data.commonPushBatch";
 
         return syncInvokeWrapper(_apiPath, _body);
     }
 
-    /**
-     * 同步执行示例
-     * @param paramDTO
-     * @return
-     */
-    public ApiResponse 同步方法例子(ApiTransferParamDTO paramDTO) {
-        String _apiPath = "aifeng.user.getJobInstanceLog2";
-
-        return syncInvokeWrapper(_apiPath, JSONObject.toJSONString(paramDTO));
-    }
-
-    /**
-     * 异步执行示例
-     * @param _body
-     * @param _callBack
-     */
-    public void 异步方法例子(String _body, ApiCallBack _callBack) {
-        String _apiPath = "aifeng.user.getJobInstanceLog2";
-
-        asyncInvokeWrapper(_apiPath, _body, _callBack);
-    }
 
 
 }

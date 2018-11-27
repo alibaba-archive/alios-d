@@ -43,11 +43,11 @@ public class ApiGwUploadDemo {
         fileUploadDTO.setServerTimestamp(System.currentTimeMillis());
         //客户自定义需要上报的数据，
         JSONObject yourData = new JSONObject();
-        //客户自定义上报的数据中必须包含名称为localFilePath的key
-        yourData.put("localFilePath", "/Users/zhangchun/Downloads/_Users_zhangchun_Downloads_java.zip");
+        //客户自定义上报的数据
         yourData.put("key", "value");
         fileUploadDTO.setData(yourData);
-        ResultDTO resultDTO = fileUploadClient.upload(fileUploadDTO);
+        String localFilePath = "/Users/zhangchun/Downloads/_Users_zhangchun_Downloads_java.zip";
+        ResultDTO resultDTO = fileUploadClient.upload(fileUploadDTO, localFilePath);
         System.out.println("result:" + JSONObject.toJSONString(resultDTO));
     }
 }

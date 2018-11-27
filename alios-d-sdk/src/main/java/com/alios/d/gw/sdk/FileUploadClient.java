@@ -37,7 +37,6 @@ public final class FileUploadClient extends AbstractApiGwClient {
 
     private static final ConcurrentHashMap<String, FileUploadClient> apiGwClientCache = new ConcurrentHashMap<>();
     private static final Object lock = new Object();
-    private static String FILE_PATH_KEY = "localFilePath";
 
     public FileUploadClient(BuilderParams params, String stage, String groupHost) {
         super(params, stage, groupHost);
@@ -74,14 +73,14 @@ public final class FileUploadClient extends AbstractApiGwClient {
      *
      * @param fileUploadDTO
      */
-    public ResultDTO upload(FileUploadDTO fileUploadDTO) {
+    public ResultDTO upload(FileUploadDTO fileUploadDTO, String localFilePath) {
         if (fileUploadDTO == null || fileUploadDTO.getEventId() == null || fileUploadDTO.getItemId() == null
-                || fileUploadDTO.getData() == null || fileUploadDTO.getData().get(FILE_PATH_KEY) == null
-                || fileUploadDTO.getTenantId() == null || fileUploadDTO.getDataId() == null || fileUploadDTO.getServerTimestamp() == null
-                || fileUploadDTO.getClientTimestamp() == null || fileUploadDTO.getReissueCount() == null) {
+                || fileUploadDTO.getData() == null || fileUploadDTO.getTenantId() == null || fileUploadDTO.getDataId() == null
+                || fileUploadDTO.getServerTimestamp() == null || fileUploadDTO.getClientTimestamp() == null
+                || fileUploadDTO.getReissueCount() == null || localFilePath == null) {
             return ResultDTO.getResult(null, ResultCodes.REQUEST_PARAM_ERROR);
         }
-        ResultDTO<JSONObject> uploadMetaResultDTO = getUploadMeta(fileUploadDTO);
+        ResultDTO<JSONObject> uploadMetaResultDTO = getUploadMeta(fileUploadDTO, localFilePath);
         if (!uploadMetaResultDTO.isSuccess()) {
             return uploadMetaResultDTO;
         }
@@ -90,11 +89,11 @@ public final class FileUploadClient extends AbstractApiGwClient {
 
         formFields.put("key", uploadMeta.getString("dir") + uploadMeta.getString("uploadFileName"));
         formFields.put("Content-Disposition", "attachment;filename="
-                + fileUploadDTO.getData().getString(FILE_PATH_KEY));
+                + localFilePath);
         formFields.put("OSSAccessKeyId", uploadMeta.getString("accessId"));
         formFields.put("policy", uploadMeta.getString("policy"));
         formFields.put("Signature", uploadMeta.getString("signature"));
-        ResultDTO uploadResultDTO = formUpload((String)uploadMeta.get("host"), formFields, fileUploadDTO.getData().getString(FILE_PATH_KEY));
+        ResultDTO uploadResultDTO = formUpload((String)uploadMeta.get("host"), formFields, localFilePath);
         return reportEvent(uploadResultDTO, uploadMeta, fileUploadDTO);
     }
 
@@ -137,14 +136,13 @@ public final class FileUploadClient extends AbstractApiGwClient {
      * 获取上传oss的upload信息
      * @return
      */
-    private ResultDTO<JSONObject> getUploadMeta(FileUploadDTO fileUploadDTO) {
+    private ResultDTO<JSONObject> getUploadMeta(FileUploadDTO fileUploadDTO, String localFilePath) {
         String apiPath = "dataconfig.uploadurl.get";
         ApiTransferParamDTO paramDTO = new ApiTransferParamDTO();
         JSONObject request = new JSONObject();
         request.put("tenantId", fileUploadDTO.getTenantId());
         request.put("deviceId", fileUploadDTO.getItemId());
         request.put("eventId", fileUploadDTO.getEventId());
-        String localFilePath = fileUploadDTO.getData().getString(FILE_PATH_KEY);
         String fileName = localFilePath.substring(localFilePath.lastIndexOf(File.separator) + 1);
         request.put("fileName", fileName);
         paramDTO.addParam("request", request);

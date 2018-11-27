@@ -27,8 +27,8 @@ public class YydjApiDemo {
         ApiGwClient syncClient = ApiGwClient.newBuilder()
                 .stage("release")
                 .groupHost("api host")  //api网关host
-                .appKey("your appkey")
-                .appSecret("your appsecret")
+                .appKey("your appKey")
+                .appSecret("your appSecret")
                 .build();
         ApiTransferParamDTO apiTransferParamDTO = new ApiTransferParamDTO();
         /**
@@ -39,8 +39,8 @@ public class YydjApiDemo {
          * 	"dataId":"流水号ID，用以标识唯一",
          * 	"itemId": "数据所属主体ID，例如车的vin号，手机的imei号等",
          * 	"serverTimestamp": 1519696866000, //云云对接服务端时间
-         * 	"clientTimestamp": "1519696866001, //云云对接客户端时间
-         * 	"reissueCount": "重传次数",
+         * 	"clientTimestamp": 1519696866001, //云云对接客户端时间
+         * 	"reissueCount": 重传次数,
          * 	"data": {//用户的自定义参数
          * 		"Driver_Door_Lock_Status": "1",
          * 		"Passenger_Door_Lock_Status": "0",
@@ -65,7 +65,7 @@ public class YydjApiDemo {
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(jsonData);
         apiTransferParamDTO.addParam("jsonData",JSONObject.toJSONString(jsonArray));
-        ApiResponse response = syncClient.云云对接例子(JSONObject.toJSONString(apiTransferParamDTO));
+        ApiResponse response = syncClient.commonPushBatch(JSONObject.toJSONString(apiTransferParamDTO));
         printResponse(response);
     }
 }
