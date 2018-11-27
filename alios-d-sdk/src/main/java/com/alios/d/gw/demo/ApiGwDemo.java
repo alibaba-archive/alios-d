@@ -37,9 +37,9 @@ public class ApiGwDemo {
     public JSONObject apiRequest() {
         ApiGwClient syncClient = ApiGwClient.newBuilder()
                 .stage("release")
-                .groupHost("alios-d-gw-daily.aliyuncs.com")  //api网关host
-                .appKey("25254733")
-                .appSecret("4c6b11b04d749f3ddaa7c65b832fee9c")
+                .groupHost("api host")  //api网关host
+                .appKey("your appKey")
+                .appSecret("your appSecret")
                 .build();
         ApiTransferParamDTO apiTransferParamDTO = new ApiTransferParamDTO();
         apiTransferParamDTO.addParam("param1","value1");
