@@ -104,8 +104,9 @@ public final class FileUploadClient extends AbstractApiGwClient {
         String apiPath = "dataconnectorcloud.data.pushUploadFileResult";
         ApiTransferParamDTO paramDTO = new ApiTransferParamDTO();
         JSONObject cloudSdkJson = new JSONObject();
-        cloudSdkJson.put("SinkExtendKey", uploadMeta.getString("sinkKey"));
-        cloudSdkJson.put("OssUrl", uploadMeta.getString("dir") + uploadMeta.getString("uploadFileName"));
+        cloudSdkJson.put("SinkExtendKey", uploadMeta.getString("sinkExtendKey"));
+        cloudSdkJson.put("OssKey", uploadMeta.getString("dir") + uploadMeta.getString("uploadFileName"));
+        cloudSdkJson.put("OssProtocol", uploadMeta.getString("ossProtocol"));
         cloudSdkJson.put("FileName", uploadMeta.getString("uploadFileName"));
         cloudSdkJson.put("UploadResult", uploadResultDTO.isSuccess());
         if (!uploadResultDTO.isSuccess()) {
