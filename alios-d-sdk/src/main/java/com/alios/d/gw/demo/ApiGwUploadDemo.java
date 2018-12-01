@@ -18,6 +18,9 @@ import com.alios.d.gw.sdk.FileUploadClient;
 import com.alios.d.gw.sdk.dto.FileUploadDTO;
 import com.alios.d.gw.sdk.dto.ResultDTO;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * author autoCreate
  * 非结构化数据上传参考下面的demo程序
@@ -27,8 +30,8 @@ public class ApiGwUploadDemo {
         FileUploadClient fileUploadClient = FileUploadClient.newBuilder()
                 .stage("release")
                 .groupHost("api host")//api网关host
-                .appKey("your appKey")
-                .appSecret("your appSecret")
+                .appKey("appKey")
+                .appSecret("appSecret")
                 .build();
         FileUploadDTO fileUploadDTO = new FileUploadDTO();
         fileUploadDTO.setTenantId("testvend");
@@ -46,8 +49,16 @@ public class ApiGwUploadDemo {
         //客户自定义上报的数据
         yourData.put("key", "value");
         fileUploadDTO.setData(yourData);
-        String localFilePath = "/Users/zhangchun/Downloads/_Users_zhangchun_Downloads_java.zip";
-        ResultDTO resultDTO = fileUploadClient.upload(fileUploadDTO, localFilePath);
+        List<String> localFilePathList = new ArrayList<>();
+        String localFilePath = "/Users/zhangchun/Downloads/test/d.txt";
+        String localFilePath1 = "/Users/zhangchun/Downloads/test/a.txt";
+        String localFilePath2 = "/Users/zhangchun/Downloads/test/b.txt";
+        String localFilePath3 = "/Users/zhangchun/Downloads/test/c.txt";
+        localFilePathList.add(localFilePath);
+        localFilePathList.add(localFilePath1);
+        localFilePathList.add(localFilePath2);
+        localFilePathList.add(localFilePath3);
+        ResultDTO resultDTO = fileUploadClient.upload(fileUploadDTO, localFilePathList);
         System.out.println("result:" + JSONObject.toJSONString(resultDTO));
     }
 }

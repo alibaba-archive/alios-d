@@ -27,9 +27,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ThreadSafe
@@ -73,27 +71,47 @@ public final class FileUploadClient extends AbstractApiGwClient {
      *
      * @param fileUploadDTO
      */
-    public ResultDTO upload(FileUploadDTO fileUploadDTO, String localFilePath) {
+    public ResultDTO upload(FileUploadDTO fileUploadDTO, List<String> localFilePathList) {
         if (fileUploadDTO == null || fileUploadDTO.getEventId() == null || fileUploadDTO.getItemId() == null
                 || fileUploadDTO.getData() == null || fileUploadDTO.getTenantId() == null || fileUploadDTO.getDataId() == null
                 || fileUploadDTO.getServerTimestamp() == null || fileUploadDTO.getClientTimestamp() == null
-                || fileUploadDTO.getReissueCount() == null || localFilePath == null) {
+                || fileUploadDTO.getReissueCount() == null || localFilePathList == null || localFilePathList.isEmpty()) {
             return ResultDTO.getResult(null, ResultCodes.REQUEST_PARAM_ERROR);
         }
-        ResultDTO<JSONObject> uploadMetaResultDTO = getUploadMeta(fileUploadDTO, localFilePath);
+        ResultDTO<JSONObject> uploadMetaResultDTO = getUploadMeta(fileUploadDTO, localFilePathList);
         if (!uploadMetaResultDTO.isSuccess()) {
             return uploadMetaResultDTO;
         }
         JSONObject uploadMeta = uploadMetaResultDTO.getData();
-        Map<String, String> formFields = new LinkedHashMap<String, String>();
+        Integer singleMaxSize = uploadMeta.getInteger("singleMaxSize");
+        if (singleMaxSize != null && singleMaxSize > 0) {
+            for (String localFilePath : localFilePathList) {
+                File localFile = new File(localFilePath);
+                if (!localFile.isFile()) {
+                    return ResultDTO.getResult(null, ResultCodes.NOT_A_FILE_ERROR);
+                }
+                if (localFile.length() > singleMaxSize * 1024 * 1024) {
+                    return ResultDTO.getResult(null,
+                            new ResultCode(800, "file size shoud not exceed " + singleMaxSize + "M", "上传文件的大小不能超过" + singleMaxSize + "M"));
+                }
+            }
+        }
+        ResultDTO uploadResultDTO = ResultDTO.getResult(null);
+        for (int i = 0;i<localFilePathList.size();i++) {
+            String localFilePath = localFilePathList.get(i);
+            Map<String, String> formFields = new LinkedHashMap<String, String>();
 
-        formFields.put("key", uploadMeta.getString("dir") + uploadMeta.getString("uploadFileName"));
-        formFields.put("Content-Disposition", "attachment;filename="
-                + localFilePath);
-        formFields.put("OSSAccessKeyId", uploadMeta.getString("accessId"));
-        formFields.put("policy", uploadMeta.getString("policy"));
-        formFields.put("Signature", uploadMeta.getString("signature"));
-        ResultDTO uploadResultDTO = formUpload((String)uploadMeta.get("host"), formFields, localFilePath);
+            formFields.put("key", (String) uploadMeta.getJSONArray("ossKey").get(i));
+            formFields.put("Content-Disposition", "attachment;filename="
+                    + localFilePath);
+            formFields.put("OSSAccessKeyId", uploadMeta.getString("accessid"));
+            formFields.put("policy", uploadMeta.getString("policy"));
+            formFields.put("Signature", uploadMeta.getString("signature"));
+            uploadResultDTO = formUpload(formFields, uploadMeta.getString("host"), localFilePath);
+            if (!uploadResultDTO.isSuccess()) {
+                break;
+            }
+        }
         return reportEvent(uploadResultDTO, uploadMeta, fileUploadDTO);
     }
 
@@ -105,9 +123,9 @@ public final class FileUploadClient extends AbstractApiGwClient {
         ApiTransferParamDTO paramDTO = new ApiTransferParamDTO();
         JSONObject cloudSdkJson = new JSONObject();
         cloudSdkJson.put("SinkExtendKey", uploadMeta.getString("sinkExtendKey"));
-        cloudSdkJson.put("OssKey", uploadMeta.getString("dir") + uploadMeta.getString("uploadFileName"));
+        cloudSdkJson.put("OssKey", uploadMeta.get("ossKey"));
         cloudSdkJson.put("OssProtocol", uploadMeta.getString("ossProtocol"));
-        cloudSdkJson.put("FileName", uploadMeta.getString("uploadFileName"));
+        //cloudSdkJson.put("FileName", uploadMeta.getString("uploadFileName"));
         cloudSdkJson.put("UploadResult", uploadResultDTO.isSuccess());
         if (!uploadResultDTO.isSuccess()) {
             cloudSdkJson.put("UploadMsg", uploadResultDTO.getErrorMsg());
@@ -119,6 +137,9 @@ public final class FileUploadClient extends AbstractApiGwClient {
         paramDTO.addParam("businessJson", businessJson);
 
         ApiResponse uploadMetaResponse = syncInvokeWrapper(apiPath, JSONObject.toJSONString(paramDTO));
+        if (!uploadResultDTO.isSuccess()) {
+            return uploadResultDTO;
+        }
         int statusCode = uploadMetaResponse.getStatusCode();
         String respJsonStr = new String(uploadMetaResponse.getBody(), Charset.forName("utf-8"));
         JSONObject respJson = JSONObject.parseObject(respJsonStr);
@@ -137,15 +158,18 @@ public final class FileUploadClient extends AbstractApiGwClient {
      * 获取上传oss的upload信息
      * @return
      */
-    private ResultDTO<JSONObject> getUploadMeta(FileUploadDTO fileUploadDTO, String localFilePath) {
+    private ResultDTO<JSONObject> getUploadMeta(FileUploadDTO fileUploadDTO, List<String> localFilePathList) {
         String apiPath = "dataconfig.uploadurl.get";
         ApiTransferParamDTO paramDTO = new ApiTransferParamDTO();
         JSONObject request = new JSONObject();
         request.put("tenantId", fileUploadDTO.getTenantId());
         request.put("deviceId", fileUploadDTO.getItemId());
         request.put("eventId", fileUploadDTO.getEventId());
-        String fileName = localFilePath.substring(localFilePath.lastIndexOf(File.separator) + 1);
-        request.put("fileName", fileName);
+        List<String> fileNameList = new ArrayList<>();
+        for (String localFilePath : localFilePathList) {
+            fileNameList.add(localFilePath.substring(localFilePathList.lastIndexOf(File.separator) + 1));
+        }
+        request.put("fileNameList", fileNameList);
         paramDTO.addParam("request", request);
         ApiResponse uploadMetaResponse = syncInvokeWrapper(apiPath, JSONObject.toJSONString(paramDTO));
         int statusCode = uploadMetaResponse.getStatusCode();
@@ -155,23 +179,29 @@ public final class FileUploadClient extends AbstractApiGwClient {
             return ResultDTO.getResult(null,
                     new ResultCode(600, respJson.getString("message"), respJson.getString("localizedMsg")));
         }
+        if (respJson.getInteger("code") != 200) {
+            return ResultDTO.getResult(respJson.get("data"),
+                    new ResultCode(respJson.getInteger("code"), respJson.getString("message"), respJson.getString("localizedMsg")));
+        }
         return ResultDTO.getResult(respJson.getJSONObject("data"));
     }
 
     /**
      * 上传文件到oss
-     * @param urlStr
      * @param formFields
-     * @param localFile
+     * @param host
+     * @param localFilePath
      * @return
      */
-    private ResultDTO formUpload(String urlStr, Map<String, String> formFields, String localFile) {
+    private ResultDTO formUpload(Map<String, String> formFields, String host, String localFilePath) {
+
+
         String res = "";
         HttpURLConnection conn = null;
         String boundary = "9431149156168";
 
         try {
-            URL url = new URL(urlStr);
+            URL url = new URL(host);
             conn = (HttpURLConnection) url.openConnection();
             conn.setConnectTimeout(5000);
             conn.setReadTimeout(30000);
@@ -217,7 +247,7 @@ public final class FileUploadClient extends AbstractApiGwClient {
             }
 
             // file
-            File file = new File(localFile);
+            File file = new File(localFilePath);
             String filename = file.getName();
             String contentType = new MimetypesFileTypeMap().getContentType(file);
             if (contentType == null || contentType.equals("")) {
