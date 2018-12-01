@@ -125,7 +125,7 @@ public final class FileUploadClient extends AbstractApiGwClient {
         cloudSdkJson.put("SinkExtendKey", uploadMeta.getString("sinkExtendKey"));
         cloudSdkJson.put("OssKey", uploadMeta.get("ossKey"));
         cloudSdkJson.put("OssProtocol", uploadMeta.getString("ossProtocol"));
-        //cloudSdkJson.put("FileName", uploadMeta.getString("uploadFileName"));
+        cloudSdkJson.put("FileName", uploadMeta.getString("fileNameList"));
         cloudSdkJson.put("UploadResult", uploadResultDTO.isSuccess());
         if (!uploadResultDTO.isSuccess()) {
             cloudSdkJson.put("UploadMsg", uploadResultDTO.getErrorMsg());
@@ -167,7 +167,7 @@ public final class FileUploadClient extends AbstractApiGwClient {
         request.put("eventId", fileUploadDTO.getEventId());
         List<String> fileNameList = new ArrayList<>();
         for (String localFilePath : localFilePathList) {
-            fileNameList.add(localFilePath.substring(localFilePathList.lastIndexOf(File.separator) + 1));
+            fileNameList.add(localFilePath.substring(localFilePath.lastIndexOf(File.separator) + 1));
         }
         request.put("fileNameList", fileNameList);
         paramDTO.addParam("request", request);
@@ -183,7 +183,9 @@ public final class FileUploadClient extends AbstractApiGwClient {
             return ResultDTO.getResult(respJson.get("data"),
                     new ResultCode(respJson.getInteger("code"), respJson.getString("message"), respJson.getString("localizedMsg")));
         }
-        return ResultDTO.getResult(respJson.getJSONObject("data"));
+        JSONObject data = respJson.getJSONObject("data");
+        data.put("fileNameList", fileNameList);
+        return ResultDTO.getResult(data);
     }
 
     /**
