@@ -125,16 +125,16 @@ public final class FileUploadClient extends AbstractApiGwClient {
         cloudSdkJson.put("SinkExtendKey", uploadMeta.getString("sinkExtendKey"));
         cloudSdkJson.put("OssKey", uploadMeta.get("ossKey"));
         cloudSdkJson.put("OssProtocol", uploadMeta.getString("ossProtocol"));
-        cloudSdkJson.put("FileName", uploadMeta.getString("fileNameList"));
+        cloudSdkJson.put("FileName", uploadMeta.getJSONArray("fileNameList").toJSONString());
         cloudSdkJson.put("UploadResult", uploadResultDTO.isSuccess());
         if (!uploadResultDTO.isSuccess()) {
             cloudSdkJson.put("UploadMsg", uploadResultDTO.getErrorMsg());
         }
         cloudSdkJson.put("OssTimeStamp", System.currentTimeMillis());
-        paramDTO.addParam("cloudSdkJson", cloudSdkJson);
+        paramDTO.addParam("cloudSdkJson", cloudSdkJson.toJSONString());
 
         JSONObject businessJson = JSONObject.parseObject(JSONObject.toJSONString(fileUploadDTO));
-        paramDTO.addParam("businessJson", businessJson);
+        paramDTO.addParam("businessJson", businessJson.toJSONString());
 
         ApiResponse uploadMetaResponse = syncInvokeWrapper(apiPath, JSONObject.toJSONString(paramDTO));
         if (!uploadResultDTO.isSuccess()) {
@@ -150,6 +150,10 @@ public final class FileUploadClient extends AbstractApiGwClient {
             } else {
                 return ResultDTO.getResult(null, ResultCodes.SERVER_ERROR);
             }
+        }
+        if (respJson.getInteger("code") != 200) {
+            return ResultDTO.getResult(respJson.get("data"),
+                    new ResultCode(respJson.getInteger("code"), respJson.getString("message"), respJson.getString("localizedMsg")));
         }
         return ResultDTO.getResult(null);
     }
@@ -176,8 +180,12 @@ public final class FileUploadClient extends AbstractApiGwClient {
         String respJsonStr = new String(uploadMetaResponse.getBody(), Charset.forName("utf-8"));
         JSONObject respJson = JSONObject.parseObject(respJsonStr);
         if (statusCode != 200) {
-            return ResultDTO.getResult(null,
-                    new ResultCode(600, respJson.getString("message"), respJson.getString("localizedMsg")));
+            if (respJson != null) {
+                return ResultDTO.getResult(null,
+                        new ResultCode(602, respJson.getString("message"), respJson.getString("localizedMsg")));
+            } else {
+                return ResultDTO.getResult(null, ResultCodes.SERVER_ERROR);
+            }
         }
         if (respJson.getInteger("code") != 200) {
             return ResultDTO.getResult(respJson.get("data"),
