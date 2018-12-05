@@ -14,7 +14,6 @@
 package com.alios.d.gw.demo;
 
 import com.alibaba.cloudapi.sdk.core.annotation.ThreadSafe;
-import com.alibaba.cloudapi.sdk.core.model.ApiCallBack;
 import com.alibaba.cloudapi.sdk.core.model.ApiResponse;
 import com.alibaba.cloudapi.sdk.core.model.BuilderParams;
 import com.alios.d.gw.sdk.AbstractApiGwClient;
@@ -27,8 +26,8 @@ public final class ApiGwClient extends AbstractApiGwClient {
     /**
      * apiGwClient本地缓存，为了防止重复创建apiGwClient造成没有必要的开销
      */
-    private static final ConcurrentHashMap<String, ApiGwClient> apiGwClientCache = new ConcurrentHashMap<>();
-    private static final Object lock = new Object();
+    private static final ConcurrentHashMap<String, ApiGwClient> API_GW_CLIENT_CACHE = new ConcurrentHashMap<>();
+    private static final Object LOCK = new Object();
 
     public ApiGwClient(BuilderParams params, String stage, String groupHost) {
         super(params, stage, groupHost);
@@ -41,14 +40,14 @@ public final class ApiGwClient extends AbstractApiGwClient {
         protected ApiGwClient build(BuilderParams params, String stage, String groupHost) {
             String cacheKey = params.getAppKey() + params.getAppSecret() + stage + groupHost;
             //如果缓存里没有cacheKey对应的apiGwClient，则创建一个，否则直接返回缓存中的apiGwClient
-            if (!apiGwClientCache.contains(cacheKey)) {
-                synchronized (lock) {
-                    if (!apiGwClientCache.contains(cacheKey)) {
-                        apiGwClientCache.put(cacheKey, new ApiGwClient(params, stage, groupHost));
+            if (!API_GW_CLIENT_CACHE.contains(cacheKey)) {
+                synchronized (LOCK) {
+                    if (!API_GW_CLIENT_CACHE.contains(cacheKey)) {
+                        API_GW_CLIENT_CACHE.put(cacheKey, new ApiGwClient(params, stage, groupHost));
                     }
                 }
             }
-            return apiGwClientCache.get(cacheKey);
+            return API_GW_CLIENT_CACHE.get(cacheKey);
         }
     }
 
