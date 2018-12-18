@@ -6,22 +6,34 @@ import com.alibaba.fastjson.JSONObject;
  * @author auto create
  */
 public class FileUploadDTO {
-    private String tenantId;
+    /**
+     * 在知点中定义的事件id
+     */
     private Integer eventId;
+    /**
+     * 流水号ID，用以标识唯一
+     */
     private String dataId;
+    /**
+     * 数据所属主体ID，例如车的vin号，手机的imei号等
+     */
     private String itemId;
+    /**
+     * 客户端上报的时间
+     */
     private Long clientTimestamp;
+    /**
+     * 服务端上报的时间
+     */
     private Long serverTimestamp;
+    /**
+     * 数据上传的重试次数
+     */
     private Integer reissueCount;
+    /**
+     * 自定义的上报的字段
+     */
     private JSONObject data;
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
 
     public Integer getEventId() {
         return eventId;

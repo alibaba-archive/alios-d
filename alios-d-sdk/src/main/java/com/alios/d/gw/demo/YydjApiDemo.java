@@ -27,14 +27,13 @@ public class YydjApiDemo {
         ApiGwClient syncClient = ApiGwClient.newBuilder()
                 .stage("release")
                 .groupHost("api host")  //api网关host
-                .appKey("your appKey")
-                .appSecret("your appSecret")
+                .appKey("appKey") // 你的appKey
+                .appSecret("appSecret")//你的appSecret
                 .build();
         ApiTransferParamDTO apiTransferParamDTO = new ApiTransferParamDTO();
         /**
          * 云云对接的参数形式,除了data中的字段是用户自定义以外，其他的参数都是必传参数
          * [{
-         *     "tenantId":"testvend", //租户id
          * 	"eventId": 1,//事件id
          * 	"dataId":"流水号ID，用以标识唯一",
          * 	"itemId": "数据所属主体ID，例如车的vin号，手机的imei号等",
@@ -51,7 +50,6 @@ public class YydjApiDemo {
          * }]
          */
         JSONObject jsonData = new JSONObject();
-        jsonData.put("tenantId", "testvend");
         jsonData.put("eventId", 86);
         jsonData.put("dataId", "dataId");
         jsonData.put("itemId", "itemId");

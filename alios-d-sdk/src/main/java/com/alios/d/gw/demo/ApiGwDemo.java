@@ -34,25 +34,30 @@ public class ApiGwDemo {
      * 获取mqtt token
      * @return
      */
-    public JSONObject apiRequest() {
+    public String apiRequest() {
         ApiGwClient syncClient = ApiGwClient.newBuilder()
                 .stage("release")
                 .groupHost("api host")  //api网关host
-                .appKey("your appKey")
-                .appSecret("your appSecret")
+                .appKey("appKey")
+                .appSecret("appSecret")
                 .build();
         ApiTransferParamDTO apiTransferParamDTO = new ApiTransferParamDTO();
-        apiTransferParamDTO.addParam("param1","value1");
-        apiTransferParamDTO.addParam("param2","value2");
-        apiTransferParamDTO.addParam("param3",3);
+        JSONObject gaodeHighwayRealtimeQueryDTO = new JSONObject();
+        gaodeHighwayRealtimeQueryDTO.put("hid","G4201_1");
+        gaodeHighwayRealtimeQueryDTO.put("startKmPileId","k0");
+        gaodeHighwayRealtimeQueryDTO.put("endKmPileId","k85");
+        apiTransferParamDTO.addParam("gaodeHighwayRealtimeQueryDTO", gaodeHighwayRealtimeQueryDTO);
         ApiResponse response = syncClient.doApiRequest(JSONObject.toJSONString(apiTransferParamDTO));
         if (response != null && response.getStatusCode() == 200) {
             String body = new String(response.getBody());
+            System.out.println("body:" + body);
             JSONObject bodyJson = JSONObject.parseObject(body);
             int code = bodyJson.getInteger("code");
             if (code == 200) {
                 String dataStr = bodyJson.getString("data");
-                return JSONObject.parseObject(dataStr);
+                return dataStr;
+            } else {
+                return bodyJson.toJSONString();
             }
         }
         return null;

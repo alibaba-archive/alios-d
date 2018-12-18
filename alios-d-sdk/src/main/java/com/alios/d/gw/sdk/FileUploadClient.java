@@ -21,13 +21,14 @@ import com.alios.d.gw.sdk.dto.FileUploadDTO;
 import com.alios.d.gw.sdk.dto.ResultCode;
 import com.alios.d.gw.sdk.dto.ResultCodes;
 import com.alios.d.gw.sdk.dto.ResultDTO;
+import com.alios.d.gw.sdk.util.OSSFormUploadUtil;
 
-import javax.activation.MimetypesFileTypeMap;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.File;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.alios.d.gw.sdk.constant.Constants.*;
@@ -68,20 +69,67 @@ public final class FileUploadClient extends AbstractApiGwClient {
         return getApiClassInstance(FileUploadClient.class);
     }
 
+
     /**
-     * 上传本地文件
+     * 上传本地文件，并且上报事件
      *
-     * @param fileUploadDTO
+     * @param fileUploadDTO 事件字段
+     * @param localFilePathList 本地文件PathList
      */
     public ResultDTO upload(FileUploadDTO fileUploadDTO, List<String> localFilePathList) {
         if (!isUploadParamLegal(fileUploadDTO, localFilePathList)) {
             return ResultDTO.getResult(null, ResultCodes.REQUEST_PARAM_ERROR);
         }
+        //获取上传文件到oss所需要的meta信息
         ResultDTO uploadMetaResultDTO = getUploadMeta(fileUploadDTO, localFilePathList);
         if (!uploadMetaResultDTO.isSuccess()) {
             return uploadMetaResultDTO;
         }
-        JSONObject uploadMeta = (JSONObject)uploadMetaResultDTO.getData();
+        JSONObject uploadMeta = (JSONObject) uploadMetaResultDTO.getData();
+        //校验要上传的本地文件是否合法
+        ResultDTO checkLocalFileResultDTO = checkLocalFile(uploadMeta, localFilePathList);
+        if (!checkLocalFileResultDTO.isSuccess()) {
+            return checkLocalFileResultDTO;
+        }
+        //上传
+        ResultDTO uploadResultDTO = doUpload(uploadMeta, localFilePathList);
+        //上报非结构化数据上传事件
+        return reportEvent(uploadResultDTO, uploadMeta, fileUploadDTO);
+    }
+
+    /**
+     * 执行上传文件到oss的操作
+     * @param uploadMeta    上传文件所需的meta信息
+     * @param localFilePathList 本次需要上传的本地文件
+     * @return
+     */
+    private ResultDTO doUpload(JSONObject uploadMeta, List<String> localFilePathList) {
+        ResultDTO uploadResultDTO = ResultDTO.getResult(null);
+        for (int i = 0; i < localFilePathList.size(); i++) {
+            String localFilePath = localFilePathList.get(i);
+            Map<String, String> formFields = new LinkedHashMap<String, String>();
+
+            formFields.put("key", (String) uploadMeta.getJSONArray(OSS_GET_UPLOAD_META_KEY_OSSKEY).get(i));
+            formFields.put("Content-Disposition", "attachment;filename="
+                    + localFilePath);
+            formFields.put("OSSAccessKeyId", uploadMeta.getString(OSS_GET_UPLOAD_META_KEY_ACCESSID));
+            formFields.put("policy", uploadMeta.getString(OSS_GET_UPLOAD_META_KEY_POLICY));
+            formFields.put("Signature", uploadMeta.getString(OSS_GET_UPLOAD_META_KEY_SIGNATURE));
+            uploadResultDTO = OSSFormUploadUtil.formUpload(formFields, uploadMeta.getString(OSS_GET_UPLOAD_META_KEY_HOST), localFilePath);
+            if (!uploadResultDTO.isSuccess()) {
+                break;
+            }
+        }
+        return uploadResultDTO;
+    }
+
+    /**
+     * 校验要上传的文件是否合法
+     * @param uploadMeta oss上传的meta数据
+     * @param localFilePathList 需要上传的本地文件的pathList
+     * @return
+     */
+    private ResultDTO checkLocalFile(JSONObject uploadMeta, List<String> localFilePathList) {
         Integer singleMaxSize = uploadMeta.getInteger(OSS_GET_UPLOAD_META_KEY_SINGLE_MAX_SIZE);
         if (singleMaxSize != null && singleMaxSize > 0) {
             for (String localFilePath : localFilePathList) {
@@ -95,27 +143,12 @@ public final class FileUploadClient extends AbstractApiGwClient {
                 }
             }
         }
-        ResultDTO uploadResultDTO = ResultDTO.getResult(null);
-        for (int i = 0;i<localFilePathList.size();i++) {
-            String localFilePath = localFilePathList.get(i);
-            Map<String, String> formFields = new LinkedHashMap<String, String>();
-
-            formFields.put("key", (String) uploadMeta.getJSONArray(OSS_GET_UPLOAD_META_KEY_OSSKEY).get(i));
-            formFields.put("Content-Disposition", "attachment;filename="
-                    + localFilePath);
-            formFields.put("OSSAccessKeyId", uploadMeta.getString(OSS_GET_UPLOAD_META_KEY_ACCESSID));
-            formFields.put("policy", uploadMeta.getString(OSS_GET_UPLOAD_META_KEY_POLICY));
-            formFields.put("Signature", uploadMeta.getString(OSS_GET_UPLOAD_META_KEY_SIGNATURE));
-            uploadResultDTO = formUpload(formFields, uploadMeta.getString(OSS_GET_UPLOAD_META_KEY_HOST), localFilePath);
-            if (!uploadResultDTO.isSuccess()) {
-                break;
-            }
-        }
-        return reportEvent(uploadResultDTO, uploadMeta, fileUploadDTO);
+        return ResultDTO.getResult(true);
     }
 
     /**
      * 上传的参数是否合法。合法返回true，否则返回false。
+     *
      * @param fileUploadDTO
      * @param localFilePathList
      * @return
@@ -148,6 +181,7 @@ public final class FileUploadClient extends AbstractApiGwClient {
         paramDTO.addParam(REPORT_EVENT_KEY_OSS_BUSINESSJSON, businessJson.toJSONString());
 
         ApiResponse uploadMetaResponse = syncInvokeWrapper(REPORT_EVENT_PATH, JSONObject.toJSONString(paramDTO));
+        // TODO: 2018/12/10 写明注释
         if (!uploadResultDTO.isSuccess()) {
             return uploadResultDTO;
         }
@@ -171,12 +205,12 @@ public final class FileUploadClient extends AbstractApiGwClient {
 
     /**
      * 获取上传oss的upload信息
+     *
      * @return
      */
     private ResultDTO getUploadMeta(FileUploadDTO fileUploadDTO, List<String> localFilePathList) {
         ApiTransferParamDTO paramDTO = new ApiTransferParamDTO();
         JSONObject request = new JSONObject();
-        request.put(OSS_GET_UPLOAD_META_KEY_TENANTID, fileUploadDTO.getTenantId());
         request.put(OSS_GET_UPLOAD_META_KEY_DEVICEID, fileUploadDTO.getItemId());
         request.put(OSS_GET_UPLOAD_META_KEY_EVENTID, fileUploadDTO.getEventId());
         List<String> fileNameList = new ArrayList<>();
@@ -205,116 +239,5 @@ public final class FileUploadClient extends AbstractApiGwClient {
         data.put(OSS_GET_UPLOAD_META_KEY_FILENAMELIST, fileNameList);
         return ResultDTO.getResult(data);
     }
-
-    /**
-     * 上传文件到oss
-     * @param formFields
-     * @param host
-     * @param localFilePath
-     * @return
-     */
-    private ResultDTO formUpload(Map<String, String> formFields, String host, String localFilePath) {
-        String res = "";
-        HttpURLConnection conn = null;
-        String boundary = "9431149156168";
-
-        try {
-            URL url = new URL(host);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(5000);
-            conn.setReadTimeout(30000);
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("User-Agent",
-                    "Mozilla/5.0 (Windows; U; Windows NT 6.1; zh-CN; rv:1.9.2.6)");
-            conn.setRequestProperty("Content-Type",
-                    "multipart/form-data; boundary=" + boundary);
-            OutputStream out = new DataOutputStream(conn.getOutputStream());
-
-            // text
-            if (formFields != null) {
-                StringBuffer strBuf = new StringBuffer();
-                Iterator<Map.Entry<String, String>> iter = formFields.entrySet().iterator();
-                int i = 0;
-
-                while (iter.hasNext()) {
-                    Map.Entry<String, String> entry = iter.next();
-                    String inputName = entry.getKey();
-                    String inputValue = entry.getValue();
-
-                    if (inputValue == null) {
-                        continue;
-                    }
-
-                    if (i == 0) {
-                        strBuf.append("--").append(boundary).append("\r\n");
-                        strBuf.append("Content-Disposition: form-data; name=\""
-                                + inputName + "\"\r\n\r\n");
-                        strBuf.append(inputValue);
-                    } else {
-                        strBuf.append("\r\n").append("--").append(boundary).append("\r\n");
-                        strBuf.append("Content-Disposition: form-data; name=\""
-                                + inputName + "\"\r\n\r\n");
-                        strBuf.append(inputValue);
-                    }
-
-                    i++;
-                }
-                out.write(strBuf.toString().getBytes());
-            }
-
-            // file
-            File file = new File(localFilePath);
-            String filename = file.getName();
-            String contentType = new MimetypesFileTypeMap().getContentType(file);
-            if (contentType == null || contentType.equals("")) {
-                contentType = "application/octet-stream";
-            }
-
-            StringBuffer strBuf = new StringBuffer();
-            strBuf.append("\r\n").append("--").append(boundary)
-                    .append("\r\n");
-            strBuf.append("Content-Disposition: form-data; name=\"file\"; "
-                    + "filename=\"" + filename + "\"\r\n");
-            strBuf.append("Content-Type: " + contentType + "\r\n\r\n");
-
-            out.write(strBuf.toString().getBytes());
-
-            DataInputStream in = new DataInputStream(new FileInputStream(file));
-            int bytes = 0;
-            byte[] bufferOut = new byte[1024];
-            while ((bytes = in.read(bufferOut)) != -1) {
-                out.write(bufferOut, 0, bytes);
-            }
-            in.close();
-
-            byte[] endData = ("\r\n--" + boundary + "--\r\n").getBytes();
-            out.write(endData);
-            out.flush();
-            out.close();
-
-            // Gets the file data
-            strBuf = new StringBuffer();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                strBuf.append(line).append("\n");
-            }
-            res = strBuf.toString();
-            reader.close();
-            reader = null;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResultDTO.getResult(false, new ResultCode(601, "upload to oss error", "上传文件到oss失败"));
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-                conn = null;
-            }
-        }
-        return ResultDTO.getResult(true);
-    }
-
 }
 
