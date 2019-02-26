@@ -6,6 +6,7 @@ import com.alios.d.gw.sdk.dto.ResultDTO;
 import javax.activation.MimetypesFileTypeMap;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.Map;
@@ -19,7 +20,7 @@ public class OSSFormUploadUtil {
      * @param localFilePath
      * @return
      */
-    public static ResultDTO formUpload(Map<String, String> formFields, String host, String localFilePath) {
+    public static ResultDTO formUpload(Map<String, String> formFields, String host, String localFilePath) throws IOException {
         String res = "";
         HttpURLConnection conn = null;
         String boundary = "9431149156168";
@@ -110,9 +111,6 @@ public class OSSFormUploadUtil {
             res = strBuf.toString();
             reader.close();
             reader = null;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResultDTO.getResult(false, ResultCodes.OSS_UPLOAD_FAILED);
         } finally {
             if (conn != null) {
                 conn.disconnect();

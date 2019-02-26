@@ -24,6 +24,7 @@ import com.alios.d.gw.sdk.dto.ResultDTO;
 import com.alios.d.gw.sdk.util.OSSFormUploadUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -76,7 +77,7 @@ public final class FileUploadClient extends AbstractApiGwClient {
      * @param fileUploadDTO 事件字段
      * @param localFilePathList 本地文件PathList
      */
-    public ResultDTO upload(FileUploadDTO fileUploadDTO, List<String> localFilePathList) {
+    public ResultDTO upload(FileUploadDTO fileUploadDTO, List<String> localFilePathList) throws IOException {
         if (!isUploadParamLegal(fileUploadDTO, localFilePathList)) {
             return ResultDTO.getResult(null, ResultCodes.REQUEST_PARAM_ERROR);
         }
@@ -103,7 +104,7 @@ public final class FileUploadClient extends AbstractApiGwClient {
      * @param localFilePathList 本次需要上传的本地文件
      * @return
      */
-    private ResultDTO doUpload(JSONObject uploadMeta, List<String> localFilePathList) {
+    private ResultDTO doUpload(JSONObject uploadMeta, List<String> localFilePathList) throws IOException {
         ResultDTO uploadResultDTO = ResultDTO.getResult(null);
         for (int i = 0; i < localFilePathList.size(); i++) {
             String localFilePath = localFilePathList.get(i);
@@ -228,7 +229,7 @@ public final class FileUploadClient extends AbstractApiGwClient {
                 return ResultDTO.getResult(null,
                         new ResultCode(respJson.getInteger(GATEWAY_KEY_CODE), respJson.getString(GATEWAY_KEY_MESSAGE), respJson.getString(GATEWAY_KEY_LOCALIZEDMSG)));
             } else {
-                return ResultDTO.getResult(null, ResultCodes.SERVER_ERROR);
+                return ResultDTO.getResult(null, new ResultCode(statusCode, uploadMetaResponse.toString(), "调用api网关异常"));
             }
         }
         if (RESPONSE_CODE_SUCCESS != respJson.getInteger(GATEWAY_KEY_CODE)) {
