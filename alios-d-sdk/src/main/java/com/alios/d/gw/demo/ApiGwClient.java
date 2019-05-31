@@ -59,10 +59,11 @@ public final class ApiGwClient extends AbstractApiGwClient {
         return getApiClassInstance(ApiGwClient.class);
     }
 
-    public ApiResponse doApiRequest(String _body) {
-        String _apiPath = "gaode.api.service";
+    public ApiResponse doApiRequest(String apiPath, String body) {
+        //String _apiPath = "business.gaodeRealtimeDataFacade.queryEvent";
+        //String _apiPath = "business.gaodeRealtimeDataFacade.queryTrafficEvent";
 
-        return syncInvokeWrapper(_apiPath, _body);
+        return syncInvokeWrapper(apiPath, body);
     }
 
     /**

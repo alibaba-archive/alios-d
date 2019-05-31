@@ -11,6 +11,7 @@ public class ResultDTO<T> {
     private String errorMsg;
     private String localizedMsg;
     private T data;
+    protected String traceId;
 
     private ResultDTO(){}
 
@@ -69,5 +70,13 @@ public class ResultDTO<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public String getTraceId() {
+        return traceId;
+    }
+
+    public void setTraceId(String traceId) {
+        this.traceId = traceId;
     }
 }

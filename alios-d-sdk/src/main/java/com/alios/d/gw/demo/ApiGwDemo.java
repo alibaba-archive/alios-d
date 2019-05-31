@@ -14,6 +14,7 @@
 package com.alios.d.gw.demo;
 
 import com.alibaba.cloudapi.sdk.core.model.ApiResponse;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alios.d.gw.sdk.ApiTransferParamDTO;
 
@@ -26,8 +27,17 @@ import com.alios.d.gw.sdk.ApiTransferParamDTO;
 
 public class ApiGwDemo {
 
+    static int count = 0;
+    static int hsfCount = 0;
+
     public static void main(String[] args) {
-        System.out.println(new ApiGwDemo().apiRequest());
+        ApiGwDemo demo = new ApiGwDemo();
+        for (int i = 0;i<1;i++) {
+            System.out.println(demo.apiRequest());
+        }
+
+        System.out.println("count: " + count);
+        System.out.println("count: " + hsfCount);
     }
 
     /**
@@ -37,29 +47,34 @@ public class ApiGwDemo {
     public String apiRequest() {
         ApiGwClient syncClient = ApiGwClient.newBuilder()
                 .stage("release")
-                .groupHost("api host")  //api网关host
-                .appKey("appKey")
-                .appSecret("appSecret")
+                .groupHost("alios-d-gw-qa.aliyuncs.com")  //api网关host
+                .appKey("xxxx") //your appKey
+                .appSecret("xxxxx") //your appSecret
                 .build();
         ApiTransferParamDTO apiTransferParamDTO = new ApiTransferParamDTO();
         JSONObject gaodeHighwayRealtimeQueryDTO = new JSONObject();
         gaodeHighwayRealtimeQueryDTO.put("hid","G4201_1");
         gaodeHighwayRealtimeQueryDTO.put("startKmPileId","k0");
         gaodeHighwayRealtimeQueryDTO.put("endKmPileId","k85");
+        gaodeHighwayRealtimeQueryDTO.put("toPage",1);
+        gaodeHighwayRealtimeQueryDTO.put("perPageSize",1);
+
         apiTransferParamDTO.addParam("gaodeHighwayRealtimeQueryDTO", gaodeHighwayRealtimeQueryDTO);
-        ApiResponse response = syncClient.doApiRequest(JSONObject.toJSONString(apiTransferParamDTO));
+        ApiResponse response = syncClient.doApiRequest("business.gaodeRealtimeDataFacade.queryEvent", JSONObject.toJSONString(apiTransferParamDTO));
         if (response != null && response.getStatusCode() == 200) {
+            count ++;
             String body = new String(response.getBody());
-            System.out.println("body:" + body);
+            System.out.println("body: " + body);
             JSONObject bodyJson = JSONObject.parseObject(body);
             int code = bodyJson.getInteger("code");
             if (code == 200) {
+                hsfCount++;
                 String dataStr = bodyJson.getString("data");
                 return dataStr;
             } else {
                 return bodyJson.toJSONString();
             }
         }
-        return null;
+        return JSON.toJSONString(response);
     }
 }

@@ -18,6 +18,7 @@ import com.alios.d.gw.sdk.FileUploadClient;
 import com.alios.d.gw.sdk.dto.FileUploadDTO;
 import com.alios.d.gw.sdk.dto.ResultDTO;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,13 +30,13 @@ public class ApiGwUploadDemo {
     public static void main(String[] args) {
         FileUploadClient fileUploadClient = FileUploadClient.newBuilder()
                 .stage("release")
-                .groupHost("api host")//api网关host
-                .appKey("appKey") //你的appKey
-                .appSecret("appSecret") //你的appSecret
+                .groupHost("alios-d-gw-qa.aliyuncs.com")//api网关host
+                .appKey("25526941") //你的appKey
+                .appSecret("aa863fa009cbc8f5b8895fc5704ade5d") //你的appSecret
                 .build();
         FileUploadDTO fileUploadDTO = new FileUploadDTO();
         //在知点中定义的事件id
-        fileUploadDTO.setEventId(10262);
+        fileUploadDTO.setEventId(10544);
         //流水号ID，用以标识唯一
         fileUploadDTO.setDataId("11");
         //数据所属主体ID，例如车的vin号，手机的imei号等
@@ -72,7 +73,7 @@ public class ApiGwUploadDemo {
         fileUploadDTO.setData(yourData);
         //需要上传的本地文件pathList
         List<String> localFilePathList = new ArrayList<>();
-        String localFilePath = "/Users/zhangchun/Downloads/test/d.txt";
+        String localFilePath = "/Users/zhangchun/Downloads/test/f.txt";
         String localFilePath1 = "/Users/zhangchun/Downloads/test/a.txt";
         String localFilePath2 = "/Users/zhangchun/Downloads/test/b.txt";
         String localFilePath3 = "/Users/zhangchun/Downloads/test/c.txt";
@@ -80,7 +81,15 @@ public class ApiGwUploadDemo {
         localFilePathList.add(localFilePath1);
         localFilePathList.add(localFilePath2);
         localFilePathList.add(localFilePath3);
-        ResultDTO resultDTO = fileUploadClient.upload(fileUploadDTO, localFilePathList);
+        ResultDTO resultDTO = null;
+        try {
+            resultDTO = fileUploadClient.upload(fileUploadDTO, localFilePathList);
+        } catch (IOException e) {
+            //请打印日志
+
+        } catch (Exception e) {
+            //请打印日志
+        }
         System.out.println("result:" + JSONObject.toJSONString(resultDTO));
     }
 }

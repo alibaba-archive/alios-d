@@ -26,9 +26,9 @@ public class YydjApiDemo {
     public static void main(String[] args) {
         ApiGwClient syncClient = ApiGwClient.newBuilder()
                 .stage("release")
-                .groupHost("api host")  //api网关host
-                .appKey("appKey") // 你的appKey
-                .appSecret("appSecret")//你的appSecret
+                .groupHost("alios-d-gw-qa.aliyuncs.com")  //api网关host
+                .appKey("25526941") // 你的appKey
+                .appSecret("aa863fa009cbc8f5b8895fc5704ade5d")//你的appSecret
                 .build();
         ApiTransferParamDTO apiTransferParamDTO = new ApiTransferParamDTO();
         /**
@@ -50,7 +50,7 @@ public class YydjApiDemo {
          * }]
          */
         JSONObject jsonData = new JSONObject();
-        jsonData.put("eventId", 86);
+        jsonData.put("eventId", 10541);
         jsonData.put("dataId", "dataId");
         jsonData.put("itemId", "itemId");
         jsonData.put("serverTimestamp", 1519696866000L);
@@ -64,6 +64,7 @@ public class YydjApiDemo {
         jsonArray.add(jsonData);
         apiTransferParamDTO.addParam("jsonData",JSONObject.toJSONString(jsonArray));
         ApiResponse response = syncClient.commonPushBatch(JSONObject.toJSONString(apiTransferParamDTO));
+        System.out.println(JSONObject.toJSONString(response));
         printResponse(response);
     }
 }
