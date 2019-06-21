@@ -34,6 +34,8 @@ public class DriveClientDemo {
      */
     public static void main(String[] args) {
         DriveClientDemo demo = new DriveClientDemo();
+        System.out.println(demo.tripList());
+        System.out.println(demo.tripGet());
         System.out.println(demo.last100Km());
     }
 
@@ -50,12 +52,12 @@ public class DriveClientDemo {
          *     "params": {
          *         "requestDTO": {
          *             "requestContext": {
-         *                 "account": "18059142963",
-         *                  "accountId": "4398046511567",
-         *                  "channelId": "APP",
-         *                  "requestId": "1528102294320",
-         *                  "tenantId": "vyingshi",
-         *                  "vin": "LVFAG7A31HK000026"
+         *                 "account": "18059142963",  // 用户名，没有可以为空
+         *                  "accountId": "4398046511567",  // 用户ID，没有可以为空
+         *                  "channelId": "APP", // 静态值，[APP,CLOUD]可选
+         *                  "requestId": "1528102294320", //客户端发送的请求ID, 方便debug
+         *                  "tenantId": "jinkang",// 租户ID
+         *                  "vin": "LVFAG7A31HK000026"// 车辆唯一标识
          *             }
          *         },
          *         "requestList": [
@@ -84,7 +86,6 @@ public class DriveClientDemo {
         carCommonRequestDTO.put("requestBody", "{'startTime':1559269935000,'endTime':1559269935444}");
         requestList.add(carCommonRequestDTO);
         requestDTO.put("requestList", requestList);
-        requestDTO.put("appKey", "24854613");
         apiTransferParamDTO.addParam("requestDTO", requestDTO);
         //发起请求
         return sendReq(JSONObject.toJSONString(apiTransferParamDTO));
@@ -103,17 +104,17 @@ public class DriveClientDemo {
          *     "params": {
          *         "requestDTO": {
          *             "requestContext": {
-         *                 "account": "18059142963",
-         *                  "accountId": "4398046511567",
-         *                  "channelId": "APP",
-         *                  "requestId": "1528102294320",
-         *                  "tenantId": "vyingshi",
-         *                  "vin": "LVFAG7A31HK000026"
+         *                 "account": "18059142963",  // 用户名，没有可以为空
+         *                  "accountId": "4398046511567",  // 用户ID，没有可以为空
+         *                  "channelId": "APP",  // 静态值，[APP,CLOUD]可选
+         *                  "requestId": "1528102294320",  //客户端发送的请求ID, 方便debug
+         *                  "tenantId": "jinkang",  // 租户ID
+         *                  "vin": "LVFAG7A31HK000026"  // 车辆唯一标识
          *             }
          *         },
          *         "requestList": [
          *              {
-         *                  "requestBody": "{\"id\":1001}",
+         *                  "requestBody": "{\"routeId\":1333}",
          *                  "requestType": "trip_get"
          *              }
          *         ]
@@ -134,10 +135,9 @@ public class DriveClientDemo {
         JSONArray requestList = new JSONArray();
         JSONObject carCommonRequestDTO = new JSONObject();
         carCommonRequestDTO.put("requestType", "trip_get");
-        carCommonRequestDTO.put("requestBody", "{'id':1001}");
+        carCommonRequestDTO.put("requestBody", "{'routeId':1333}");
         requestList.add(carCommonRequestDTO);
         requestDTO.put("requestList", requestList);
-        requestDTO.put("appKey", "24854613");
         apiTransferParamDTO.addParam("requestDTO", requestDTO);
         //发起请求
         return sendReq(JSONObject.toJSONString(apiTransferParamDTO));
@@ -157,17 +157,17 @@ public class DriveClientDemo {
          *     "params": {
          *         "requestDTO": {
          *             "requestContext": {
-         *                 "account": "18059142963",
-         *                  "accountId": "4398046511567",
-         *                  "channelId": "APP",
-         *                  "requestId": "1528102294320",
-         *                  "tenantId": "vyingshi",
-         *                  "vin": "LVFAG7A31HK000026"
+         *                 "account": "18059142963",  // 用户名，没有可以为空
+         *                  "accountId": "4398046511567",  // 用户ID，没有可以为空
+         *                  "channelId": "APP",  // 静态值，[APP,CLOUD]可选
+         *                  "requestId": "1528102294320",  //客户端发送的请求ID, 方便debug
+         *                  "tenantId": "jinkang",  // 租户ID
+         *                  "vin": "LVFAG7A31HK000026"  // 车辆唯一标识
          *             }
          *         },
          *         "requestList": [
          *              {
-         *                  "requestBody": "{\"analysisType\":\"last_100km\",\"indicatorList\":[\"score\",\"rapid_accelerate_qty\",\"rapid_decelerate_qty\",\"sudden_turn_qty\",\"no_belt_qty\",\"steering_lamp_not_used_qty\",\"light_not_used_qty\"]}",
+         *                  "requestBody": "{\"analysisType\":\"last_1000km\"}",
          *                  "requestType": "analysis_drive"
          *              }
          *         ]
@@ -188,10 +188,9 @@ public class DriveClientDemo {
         JSONArray requestList = new JSONArray();
         JSONObject carCommonRequestDTO = new JSONObject();
         carCommonRequestDTO.put("requestType", "analysis_drive");
-        carCommonRequestDTO.put("requestBody", "{'analysisType':'last_100km','indicatorList':['score','rapid_accelerate_qty','rapid_decelerate_qty','sudden_turn_qty','no_belt_qty','steering_lamp_not_used_qty','light_not_used_qty']}");
+        carCommonRequestDTO.put("requestBody", "{'analysisType':'last_1000km'}");
         requestList.add(carCommonRequestDTO);
         requestDTO.put("requestList", requestList);
-        requestDTO.put("appKey", "24854613");
         apiTransferParamDTO.addParam("requestDTO", requestDTO);
         //发起请求
         return sendReq(JSONObject.toJSONString(apiTransferParamDTO));
@@ -205,9 +204,9 @@ public class DriveClientDemo {
     private String sendReq(String paramJson) {
         ApiGwClient syncClient = ApiGwClient.newBuilder()
                 .stage("release")
-                .groupHost("alios-d-gw-qa.aliyuncs.com")  //api网关host
-                .appKey("xxxx") //your appkey
-                .appSecret("xxxx") //your appSecret
+                .groupHost("alios-d-gw-gongban-test.aliyuncs.com")  //api网关host
+                .appKey("xxx") //your appkey
+                .appSecret("xxx") //your appSecret
                 .build();
         //请求的apiPath
         String apiPath = "carservice.client.call";
@@ -224,7 +223,6 @@ public class DriveClientDemo {
     private String getResponseStr(ApiResponse response) {
         if (response != null && response.getStatusCode() == 200) {
             String body = new String(response.getBody());
-            System.out.println("body: " + body);
             JSONObject bodyJson = JSONObject.parseObject(body);
             int code = bodyJson.getInteger("code");
             if (code == 200) {
